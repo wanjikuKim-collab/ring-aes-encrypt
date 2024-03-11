@@ -1,5 +1,5 @@
 use std::fs::File;
-use std::io::{Error, ErrorKind};
+use std::io::{self,BufReader, Read};
 
 pub struct MP4Reader {
     path: String,
@@ -7,27 +7,24 @@ pub struct MP4Reader {
 }
 
 impl MP4Reader {
-    pub fn read_file(path: &str) -> Result<Self, MP4ReaderError> {
-        let mut file = match File::open(path) {
-            Ok(file) => file,
-            Err(err) => match err.kind() {
-                ErrorKind::NotFound => return Err(MP4ReaderError::FileNotFound(path.to_owned())),
-                ErrorKind::PermissionDenied => return Err(MP4ReaderError::PermissionDenied(path.to_owned())),
-                _ => return Err(MP4ReaderError::IoError(err)),
-            },
+    pub fn read_file(path: &str) -> Result<Self, io::Error> {
+        let mut mp4_file = File::open(path).expect("Failed to open file");
+
+        // reading file into a BufReader
+        let mut reader = BufReader::new(&mut mp4_file);
+        
+        //code to read MP4 file in a vector
+        let mut buffer = Vec::new();
+        reader.read_to_end(&mut buffer).expect("Failed to read file");
+
+        let mp4_reader = MP4Reader{
+            path: path,
+            data: buffer,
         };
 
-        let mut data = Vec::new();
-        match file.read_to_end(&mut data) {
-            Ok(_) => Ok(Self { path, data }),
-            Err(err) => Err(MP4ReaderError::IoError(err)),
-        }
+        Ok(Self{
+            path: path.to_owned(),
+            data: buffer
+        })    
     }
-}
-
-#[derive(Debug)]
-pub enum MP4ReaderError {
-    FileNotFound(String),
-    PermissionDenied(String),
-    IoError(std::io::Error),
 }
