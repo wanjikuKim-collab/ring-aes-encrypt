@@ -1,9 +1,10 @@
 use std::fs::File;
 use std::io::{BufReader, Read, ErrorKind};
 
+#[derive(Debug)]
 pub struct MP4Reader {
-    path: String,
-    data: Vec<u8>,
+    pub path: String,
+    pub data: Vec<u8>,
 }
 
 #[derive(Debug)]
